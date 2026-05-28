@@ -14,7 +14,7 @@ FEATURES = [f"V{i}" for i in range(1, 29)] + ["Amount"]
 model = joblib.load(MODEL_PATH)
 
 
-@app.get("/health")
+@app.get("/ping")
 def health():
     return jsonify({"status": "ok", "model": "XGBClassifier"})
 
