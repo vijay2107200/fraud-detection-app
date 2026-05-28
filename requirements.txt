@@ -1,4 +1,6 @@
 streamlit
+flask
+gunicorn
 joblib
 numpy
 pandas
