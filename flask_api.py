@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import joblib
 import numpy as np
 import pandas as pd
@@ -12,6 +12,11 @@ MODEL_PATH = BASE_DIR / "xgb_model.pkl"
 FEATURES = [f"V{i}" for i in range(1, 29)] + ["Amount"]
 
 model = joblib.load(MODEL_PATH)
+
+
+@app.get("/")
+def index():
+    return render_template("index.html")
 
 
 @app.get("/ping")

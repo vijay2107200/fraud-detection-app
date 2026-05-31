@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Credit Card Fraud Detection</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    h1 { font-size: 2rem; color: #fff; margin-bottom: 6px; }
+    .subtitle { color: #888; margin-bottom: 36px; font-size: 0.95rem; }
+
+    .card {
+      background: #1e2130;
+      border-radius: 12px;
+      padding: 32px;
+      width: 100%;
+      max-width: 720px;
+      margin-bottom: 24px;
+    }
+
+    .card h2 { font-size: 1.1rem; color: #aaa; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    label { display: block; font-size: 0.82rem; color: #888; margin-bottom: 4px; }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      background: #2a2f45;
+      border: 1px solid #3a4060;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+    input[type="number"]:focus { border-color: #6c63ff; }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #6c63ff;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 24px;
+      transition: background 0.2s;
+    }
+    button:hover { background: #574fd6; }
+    button:disabled { background: #444; cursor: not-allowed; }
+
+    #result { display: none; }
+
+    .result-box {
+      border-radius: 10px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .result-box.fraud { background: #3b1a1a; border: 1px solid #e74c3c; }
+    .result-box.legit { background: #1a3b2a; border: 1px solid #2ecc71; }
+
+    .result-label { font-size: 1.6rem; font-weight: 700; margin-bottom: 8px; }
+    .fraud .result-label { color: #e74c3c; }
+    .legit .result-label { color: #2ecc71; }
+
+    .prob-row { display: flex; justify-content: center; gap: 32px; margin-top: 12px; }
+    .prob-item { text-align: center; }
+    .prob-value { font-size: 1.4rem; font-weight: 700; }
+    .prob-key { font-size: 0.78rem; color: #888; margin-top: 2px; }
+
+    .bar-wrap { margin-top: 16px; background: #2a2f45; border-radius: 999px; height: 8px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 999px; transition: width 0.6s ease; }
+    .fraud .bar-fill { background: #e74c3c; }
+    .legit .bar-fill { background: #2ecc71; }
+
+    footer { color: #444; font-size: 0.8rem; margin-top: 16px; }
+  </style>
+</head>
+<body>
+
+  <h1>Credit Card Fraud Detection</h1>
+  <p class="subtitle">Enter transaction details to check if it is fraudulent</p>
+
+  <div class="card">
+    <h2>Transaction Inputs</h2>
+    <div class="grid">
+      <div>
+        <label>Amount (€)</label>
+        <input type="number" id="Amount" value="100" step="0.01" min="0" />
+      </div>
+      <div>
+        <label>V1</label>
+        <input type="number" id="V1" value="0" step="0.01" />
+      </div>
+      <div>
+        <label>V2</label>
+        <input type="number" id="V2" value="0" step="0.01" />
+      </div>
+      <div>
+        <label>V3</label>
+        <input type="number" id="V3" value="0" step="0.01" />
+      </div>
+      <div>
+        <label>V4</label>
+        <input type="number" id="V4" value="0" step="0.01" />
+      </div>
+      <div>
+        <label>V10</label>
+        <input type="number" id="V10" value="0" step="0.01" />
+      </div>
+      <div>
+        <label>V12</label>
+        <input type="number" id="V12" value="0" step="0.01" />
+      </div>
+      <div>
+        <label>V14</label>
+        <input type="number" id="V14" value="0" step="0.01" />
+      </div>
+      <div>
+        <label>V17</label>
+        <input type="number" id="V17" value="0" step="0.01" />
+      </div>
+    </div>
+    <button id="btn" onclick="predict()">Check Transaction</button>
+  </div>
+
+  <div class="card" id="result">
+    <h2>Result</h2>
+    <div class="result-box" id="result-box">
+      <div class="result-label" id="result-label"></div>
+      <div class="bar-wrap"><div class="bar-fill" id="bar"></div></div>
+      <div class="prob-row">
+        <div class="prob-item">
+          <div class="prob-value" id="fraud-prob"></div>
+          <div class="prob-key">Fraud Probability</div>
+        </div>
+        <div class="prob-item">
+          <div class="prob-value" id="legit-prob"></div>
+          <div class="prob-key">Legitimate Probability</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Built with XGBoost + Flask &nbsp;|&nbsp; Credit Card Fraud Detection</footer>
+
+  <script>
+    const ALL_FEATURES = ["V1","V2","V3","V4","V5","V6","V7","V8","V9","V10",
+                          "V11","V12","V13","V14","V15","V16","V17","V18","V19",
+                          "V20","V21","V22","V23","V24","V25","V26","V27","V28","Amount"];
+
+    async function predict() {
+      const btn = document.getElementById("btn");
+      btn.disabled = true;
+      btn.textContent = "Checking...";
+
+      const body = {};
+      ALL_FEATURES.forEach(f => {
+        const el = document.getElementById(f);
+        body[f] = el ? parseFloat(el.value) || 0 : 0;
+      });
+
+      try {
+        const res = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+
+        const isFraud = data.prediction === "fraud";
+        const fraudPct = (data.fraud_probability * 100).toFixed(1);
+        const legitPct = (data.legitimate_probability * 100).toFixed(1);
+
+        const box = document.getElementById("result-box");
+        box.className = "result-box " + (isFraud ? "fraud" : "legit");
+        document.getElementById("result-label").textContent = isFraud ? "FRAUD DETECTED" : "LEGITIMATE TRANSACTION";
+        document.getElementById("fraud-prob").textContent = fraudPct + "%";
+        document.getElementById("legit-prob").textContent = legitPct + "%";
+        document.getElementById("bar").style.width = fraudPct + "%";
+
+        document.getElementById("result").style.display = "block";
+      } catch (e) {
+        alert("Error connecting to API: " + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Check Transaction";
+      }
+    }
+  </script>
+</body>
+</html>
